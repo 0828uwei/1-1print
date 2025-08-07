@@ -69,7 +69,7 @@
   <audio id="audio" controls></audio><br>
   <input type="text" id="answer" placeholder="請輸入聽到的內容"><br>
   <div class="note">&nbsp;</div>
-  <div class="note" id="hint">請注意空格與拼寫正確</div>
+  <div class="note" id="hint">請注意空格與標點符號</div>
   <button id="check-btn" disabled>確認</button>
   <div id="result"></div>
   <button id="next-btn" class="hidden">下一題</button>
@@ -114,8 +114,7 @@
       return array;
     }
 
-    const shuffledQuestions = shuffle([...questions]);
-
+    let shuffledQuestions = shuffle([...questions]);
     let current = 0;
     let correct = 0;
     let finalScore = 0;
@@ -236,7 +235,7 @@
       questionNumber.style.display = "block";
       resultDiv.style.display = "block";
       hintDiv.style.display = "block";
-      shuffle(shuffledQuestions);
+      shuffledQuestions = shuffle([...questions]);
       loadQuestion();
     });
 
