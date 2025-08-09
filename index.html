@@ -31,6 +31,13 @@
       padding: 10px 20px;
       font-size: 16px;
       display: block;
+      max-width: 400px;
+      width: 100%;
+      cursor: pointer;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
     }
     .choice-btn {
       width: 100%;
@@ -56,6 +63,12 @@
       font-size: 14px;
       color: #888;
       margin: 2px 0;
+    }
+    #download-note {
+      font-size: 14px;
+      color: #c33;
+      margin-top: 5px;
+      margin-bottom: 15px;
     }
   </style>
 </head>
@@ -84,6 +97,7 @@
     const gameTitle = "1-1 單字聽力測驗";
 
     const questions = [
+
       { word: "어여", audio: "audio/hurry.mp3", choices: ["어여", "오여", "오요"] },
       { word: "우유", audio: "audio/milk.mp3", choices: ["우유", "우요", "어유"] }
     ];
@@ -135,48 +149,76 @@
       document.getElementById("result").classList.remove("hidden");
 
       const percent = Math.round((correct / shuffledQuestions.length) * 100);
-      document.getElementById("score-text").textContent = `你的分數是 ${percent}% (${correct} / ${shuffledQuestions.length})`;
+      document.getElementById("score-text").textContent = `你的分數是 ${percent}分 (${correct} / ${shuffledQuestions.length})`;
 
       const passFailText = document.getElementById("pass-fail");
       const submitBtn = document.getElementById("submit-btn");
+
+      // 移除舊下載按鈕與提醒
+      removeDownloadFileButton();
+      removeDownloadNote();
 
       if (percent >= 80) {
         passFailText.textContent = "🎉 成績合格！";
         submitBtn.disabled = false;
         submitBtn.style.opacity = "1";
 
-        createDownloadFileButton();
+        createDownloadFileButton(false); // 預設禁用下載按鈕
+        createDownloadNote();
+
+        const nicknameInput = document.getElementById("nickname");
+        const downloadBtn = document.getElementById("download-btn");
+
+        nicknameInput.addEventListener("input", () => {
+          if (nicknameInput.value.trim() !== "") {
+            downloadBtn.disabled = false;
+            downloadBtn.style.opacity = "1";
+            removeDownloadNote();
+          } else {
+            downloadBtn.disabled = true;
+            downloadBtn.style.opacity = "0.5";
+            createDownloadNote();
+          }
+        });
+
       } else {
         passFailText.textContent = "❌ 成績不合格";
         submitBtn.disabled = true;
         submitBtn.style.opacity = "0.5";
-
-        removeDownloadFileButton();
       }
     }
 
-    function createDownloadFileButton() {
-      if (document.getElementById("download-btn")) return; // 避免重複建立
-
-      const nickname = document.getElementById("nickname").value.trim() || "未知使用者";
-      const percent = Math.round((correct / shuffledQuestions.length) * 100);
-      const now = new Date();
-      const timeStr = now.toLocaleString("zh-TW");
-
-      const content =
-        `測驗標題: ${gameTitle}\n` +
-        `測驗者名字: ${nickname}\n` +
-        `時間: ${timeStr}\n` +
-        `成績: ${percent}% (${correct} / ${shuffledQuestions.length})\n` +
-        `是否合格: 合格\n`;
-
-      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
+    function createDownloadFileButton(enable = true) {
+      if (document.getElementById("download-btn")) return;
 
       const btn = document.createElement("button");
       btn.id = "download-btn";
       btn.textContent = "下載成績報告";
+      btn.disabled = !enable;
+      btn.style.opacity = enable ? "1" : "0.5";
+      btn.style.marginTop = "10px";
+
       btn.onclick = () => {
+        const nickname = document.getElementById("nickname").value.trim();
+        if (!nickname) {
+          alert("請先輸入姓名＋生日");
+          return;
+        }
+
+        const percent = Math.round((correct / shuffledQuestions.length) * 100);
+        const now = new Date();
+        const timeStr = now.toLocaleString("zh-TW");
+
+        const content =
+          `測驗標題: ${gameTitle}\n` +
+          `測驗者名字: ${nickname}\n` +
+          `時間: ${timeStr}\n` +
+          `成績: ${percent}% (${correct} / ${shuffledQuestions.length})\n` +
+          `是否合格: 合格\n`;
+
+        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
         const a = document.createElement("a");
         a.href = url;
         a.download = `${nickname}_測驗成績.txt`;
@@ -187,9 +229,23 @@
       document.getElementById("result").appendChild(btn);
     }
 
+    function createDownloadNote() {
+      if (document.getElementById("download-note")) return;
+
+      const p = document.createElement("p");
+      p.id = "download-note";
+      p.textContent = "輸入姓名後才能下載報告";
+      document.getElementById("result").appendChild(p);
+    }
+
     function removeDownloadFileButton() {
       const btn = document.getElementById("download-btn");
       if (btn) btn.remove();
+    }
+
+    function removeDownloadNote() {
+      const note = document.getElementById("download-note");
+      if (note) note.remove();
     }
 
     function submitToGoogle() {
